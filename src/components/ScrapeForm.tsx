@@ -21,43 +21,23 @@ export default function ScrapeForm({ onScrapeComplete }: ScrapeFormProps) {
     setIsLoading(true);
     setProgress(0);
     try {
+      console.log('Sending request to /api/scrape');
       const response = await fetch('/api/scrape', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url }),
       });
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
 
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
-      let result = '';
+      const data = await response.json();
+      console.log('Response data:', data);
 
-      while (true) {
-        const { done, value } = await reader!.read();
-        if (done) break;
-        const chunk = decoder.decode(value);
-        result += chunk;
-
-        try {
-          const lines = result.split('\n');
-          for (const line of lines) {
-            if (line.trim()) {
-              const parsedChunk = JSON.parse(line);
-              if (parsedChunk.progress) {
-                setProgress(parsedChunk.progress);
-              }
-            }
-          }
-        } catch (e) {
-          // Ignore parsing errors for incomplete chunks
-        }
-      }
-
-      const data: ScrapeResult | { error: string; details: string } = JSON.parse(result.trim().split('\n').pop() || '{}');
-      if (response.ok && 'scrapedData' in data) {
+      if (response.ok) {
         onScrapeComplete(data as ScrapeResult);
       } else {
         console.error('Error response:', data);
-        alert(`Error: ${(data as any).error || 'Unknown error'}\nDetails: ${(data as any).details || 'No details available'}`);
+        alert(`Error: ${data.error || 'Unknown error'}`);
       }
     } catch (error: unknown) {
       console.error('Error scraping:', error);
