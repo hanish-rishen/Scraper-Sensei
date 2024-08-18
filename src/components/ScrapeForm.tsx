@@ -52,12 +52,12 @@ export default function ScrapeForm({ onScrapeComplete }: ScrapeFormProps) {
         }
       }
 
-      const data: ScrapeResult = JSON.parse(result.trim().split('\n').pop() || '{}');
-      if (response.ok) {
-        onScrapeComplete(data);
+      const data: ScrapeResult | { error: string; details: string } = JSON.parse(result.trim().split('\n').pop() || '{}');
+      if (response.ok && 'scrapedData' in data) {
+        onScrapeComplete(data as ScrapeResult);
       } else {
         console.error('Error response:', data);
-        alert(`Error: ${(data as any).error}\nDetails: ${(data as any).details}`);
+        alert(`Error: ${(data as any).error || 'Unknown error'}\nDetails: ${(data as any).details || 'No details available'}`);
       }
     } catch (error: unknown) {
       console.error('Error scraping:', error);

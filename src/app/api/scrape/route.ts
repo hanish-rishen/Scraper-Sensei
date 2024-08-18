@@ -28,7 +28,20 @@ export async function POST(req: Request) {
       await writer.write(encoder.encode(JSON.stringify({ scrapedData, analysis })));
     } catch (error: unknown) {
       console.error('Error in scrape route:', error);
-      await writer.write(encoder.encode(JSON.stringify({ error: 'Failed to scrape or analyze', details: error instanceof Error ? error.message : 'Unknown error' })));
+      let errorMessage = 'An unknown error occurred';
+      let errorDetails = '';
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+        errorDetails = error.stack || '';
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      
+      await writer.write(encoder.encode(JSON.stringify({ 
+        error: errorMessage, 
+        details: errorDetails 
+      })));
     } finally {
       await writer.close();
     }
