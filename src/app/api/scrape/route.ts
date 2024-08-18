@@ -1,30 +1,19 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { scrapeWebsite } from '@/lib/scraper';
 import { analyzeContent } from '@/lib/aiAnalyzer';
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   const { url } = await req.json();
   console.log('Received scrape request for URL:', url);
 
-  const encoder = new TextEncoder();
-  const stream = new TransformStream();
-  const writer = stream.writable.getWriter();
-
-  const sendProgress = async (progress: number) => {
-    await writer.write(encoder.encode(JSON.stringify({ progress }) + '\n'));
-  };
-
   try {
-    await sendProgress(10);
     const scrapedData = await scrapeWebsite(url);
     console.log('Scraped data:', scrapedData);
-    await sendProgress(50);
 
     const analysis = await analyzeContent(scrapedData);
     console.log('Analysis result:', analysis);
-    await sendProgress(90);
 
-    await writer.write(encoder.encode(JSON.stringify({ scrapedData, analysis })));
+    return NextResponse.json({ scrapedData, analysis });
   } catch (error: unknown) {
     console.error('Error in scrape route:', error);
     let errorMessage = 'An unknown error occurred';
@@ -39,15 +28,6 @@ export async function POST(req: Request) {
     
     console.error('Detailed error:', { errorMessage, errorDetails });
     
-    await writer.write(encoder.encode(JSON.stringify({ 
-      error: errorMessage, 
-      details: errorDetails || 'No details available'
-    })));
-  } finally {
-    await writer.close();
+    return NextResponse.json({ error: errorMessage, details: errorDetails || 'No details available' }, { status: 500 });
   }
-
-  return new NextResponse(stream.readable, {
-    headers: { 'Content-Type': 'application/json' },
-  });
 }
