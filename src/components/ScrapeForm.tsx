@@ -33,6 +33,10 @@ export default function ScrapeForm({ onScrapeComplete }: ScrapeFormProps) {
       const text = await response.text();
       console.log('Raw response:', text);
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       let data;
       try {
         data = JSON.parse(text);
@@ -43,10 +47,10 @@ export default function ScrapeForm({ onScrapeComplete }: ScrapeFormProps) {
 
       console.log('Parsed data:', data);
 
-      if (response.ok && 'scrapedData' in data && 'analysis' in data) {
+      if ('scrapedData' in data && 'analysis' in data) {
         onScrapeComplete(data as ScrapeResult);
       } else {
-        throw new Error(data.error || `Invalid response structure: ${JSON.stringify(data)}`);
+        throw new Error(`Invalid response structure: ${JSON.stringify(data)}`);
       }
     } catch (error: unknown) {
       console.error('Error scraping:', error);
