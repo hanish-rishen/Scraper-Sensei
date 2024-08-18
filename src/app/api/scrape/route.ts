@@ -3,6 +3,7 @@ import { scrapeWebsite } from '@/lib/scraper';
 import { analyzeContent } from '@/lib/aiAnalyzer';
 
 export async function POST(req: NextRequest) {
+  console.log('POST request received at /api/scrape');
   try {
     const { url } = await req.json();
     console.log('Received scrape request for URL:', url);
@@ -22,3 +23,9 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
