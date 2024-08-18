@@ -38,7 +38,7 @@ export default function ScrapeForm({ onScrapeComplete }: ScrapeFormProps) {
         data = JSON.parse(text);
       } catch (parseError) {
         console.error('Error parsing JSON:', parseError);
-        throw new Error('Invalid JSON response from server');
+        throw new Error(`Invalid JSON response from server: ${text}`);
       }
 
       console.log('Parsed data:', data);
@@ -46,7 +46,7 @@ export default function ScrapeForm({ onScrapeComplete }: ScrapeFormProps) {
       if (response.ok && 'scrapedData' in data && 'analysis' in data) {
         onScrapeComplete(data as ScrapeResult);
       } else {
-        throw new Error(data.error || 'Invalid response from server');
+        throw new Error(data.error || `Invalid response structure: ${JSON.stringify(data)}`);
       }
     } catch (error: unknown) {
       console.error('Error scraping:', error);
