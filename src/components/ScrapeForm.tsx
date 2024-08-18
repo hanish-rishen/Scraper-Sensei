@@ -30,8 +30,18 @@ export default function ScrapeForm({ onScrapeComplete }: ScrapeFormProps) {
       console.log('Response status:', response.status);
       console.log('Response headers:', response.headers);
 
-      const data = await response.json();
-      console.log('Response data:', data);
+      const text = await response.text();
+      console.log('Raw response:', text);
+
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (parseError) {
+        console.error('Error parsing JSON:', parseError);
+        throw new Error('Invalid JSON response from server');
+      }
+
+      console.log('Parsed data:', data);
 
       if (response.ok && 'scrapedData' in data && 'analysis' in data) {
         onScrapeComplete(data as ScrapeResult);
