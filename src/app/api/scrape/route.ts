@@ -38,9 +38,11 @@ export async function POST(req: Request) {
         errorMessage = error;
       }
       
+      console.error('Detailed error:', { errorMessage, errorDetails });
+      
       await writer.write(encoder.encode(JSON.stringify({ 
         error: errorMessage, 
-        details: errorDetails 
+        details: errorDetails || 'No details available'
       })));
     } finally {
       await writer.close();

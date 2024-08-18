@@ -35,8 +35,8 @@ export async function scrapeWebsite(url: string) {
     };
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      logger.error(`Axios error: ${error.message}. Status: ${error.response?.status}`);
-      throw new Error(`Axios error: ${error.message}. Status: ${error.response?.status}`);
+      logger.error(`Axios error: ${error.message}. Status: ${error.response?.status}. Data: ${JSON.stringify(error.response?.data)}`);
+      throw new Error(`Axios error: ${error.message}. Status: ${error.response?.status}. Data: ${JSON.stringify(error.response?.data)}`);
     } else {
       logger.error(`Unknown error: ${error instanceof Error ? error.message : 'An unknown error occurred'}`);
       throw new Error(`Unknown error: ${error instanceof Error ? error.message : 'An unknown error occurred'}`);
