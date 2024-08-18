@@ -14,40 +14,38 @@ export async function POST(req: Request) {
     await writer.write(encoder.encode(JSON.stringify({ progress }) + '\n'));
   };
 
-  (async () => {
-    try {
-      await sendProgress(10);
-      const scrapedData = await scrapeWebsite(url);
-      console.log('Scraped data:', scrapedData);
-      await sendProgress(50);
+  try {
+    await sendProgress(10);
+    const scrapedData = await scrapeWebsite(url);
+    console.log('Scraped data:', scrapedData);
+    await sendProgress(50);
 
-      const analysis = await analyzeContent(scrapedData);
-      console.log('Analysis result:', analysis);
-      await sendProgress(90);
+    const analysis = await analyzeContent(scrapedData);
+    console.log('Analysis result:', analysis);
+    await sendProgress(90);
 
-      await writer.write(encoder.encode(JSON.stringify({ scrapedData, analysis })));
-    } catch (error: unknown) {
-      console.error('Error in scrape route:', error);
-      let errorMessage = 'An unknown error occurred';
-      let errorDetails = '';
-      
-      if (error instanceof Error) {
-        errorMessage = error.message;
-        errorDetails = error.stack || '';
-      } else if (typeof error === 'string') {
-        errorMessage = error;
-      }
-      
-      console.error('Detailed error:', { errorMessage, errorDetails });
-      
-      await writer.write(encoder.encode(JSON.stringify({ 
-        error: errorMessage, 
-        details: errorDetails || 'No details available'
-      })));
-    } finally {
-      await writer.close();
+    await writer.write(encoder.encode(JSON.stringify({ scrapedData, analysis })));
+  } catch (error: unknown) {
+    console.error('Error in scrape route:', error);
+    let errorMessage = 'An unknown error occurred';
+    let errorDetails = '';
+    
+    if (error instanceof Error) {
+      errorMessage = error.message;
+      errorDetails = error.stack || '';
+    } else if (typeof error === 'string') {
+      errorMessage = error;
     }
-  })();
+    
+    console.error('Detailed error:', { errorMessage, errorDetails });
+    
+    await writer.write(encoder.encode(JSON.stringify({ 
+      error: errorMessage, 
+      details: errorDetails || 'No details available'
+    })));
+  } finally {
+    await writer.close();
+  }
 
   return new NextResponse(stream.readable, {
     headers: { 'Content-Type': 'application/json' },

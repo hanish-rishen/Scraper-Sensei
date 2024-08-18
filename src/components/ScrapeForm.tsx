@@ -30,14 +30,39 @@ export default function ScrapeForm({ onScrapeComplete }: ScrapeFormProps) {
       console.log('Response status:', response.status);
       console.log('Response headers:', response.headers);
 
-      const data = await response.json();
-      console.log('Response data:', data);
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let result = '';
 
-      if (response.ok) {
-        onScrapeComplete(data as ScrapeResult);
-      } else {
-        console.error('Error response:', data);
-        alert(`Error: ${data.error || 'Unknown error'}`);
+      while (true) {
+        const { done, value } = await reader!.read();
+        if (done) break;
+        const chunk = decoder.decode(value);
+        result += chunk;
+        console.log('Received chunk:', chunk);
+
+        try {
+          const parsedChunk = JSON.parse(chunk);
+          if (parsedChunk.progress) {
+            setProgress(parsedChunk.progress);
+          }
+        } catch (e) {
+          // Ignore parsing errors for incomplete chunks
+        }
+      }
+
+      console.log('Full response:', result);
+
+      try {
+        const data = JSON.parse(result);
+        if ('scrapedData' in data && 'analysis' in data) {
+          onScrapeComplete(data as ScrapeResult);
+        } else {
+          throw new Error('Invalid response format');
+        }
+      } catch (error) {
+        console.error('Error parsing response:', error);
+        alert('Error: Invalid response from server');
       }
     } catch (error: unknown) {
       console.error('Error scraping:', error);
