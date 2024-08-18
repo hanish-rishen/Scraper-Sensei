@@ -5,8 +5,13 @@ import { analyzeContent } from '@/lib/aiAnalyzer';
 export async function POST(req: NextRequest) {
   console.log('POST request received at /api/scrape');
   try {
-    const { url } = await req.json();
+    const body = await req.json();
+    const { url } = body;
     console.log('Received scrape request for URL:', url);
+
+    if (!url) {
+      return NextResponse.json({ error: 'URL is required' }, { status: 400 });
+    }
 
     const scrapedData = await scrapeWebsite(url);
     console.log('Scraped data:', scrapedData);
@@ -23,3 +28,9 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
+export const config = {
+  api: {
+    bodyParser: true,
+  },
+};
